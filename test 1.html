@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Coordinate Plane & Pythagoras Distance</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    body { margin: 0; font-family: 'Tajawal', sans-serif; background: linear-gradient(135deg,#38bdf8,#0ea5e9); color: white; text-align: center; }
+    h1 { margin: 15px 0; font-weight: 700; }
+    .wrapper { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; padding: 20px; }
+    .panel { background: rgba(2,6,23,0.85); padding: 18px; border-radius: 14px; box-shadow: 0 0 25px rgba(0,0,0,0.5); }
+    input { width: 60px; padding: 8px; margin: 4px; font-size: 18px; text-align: center; border-radius: 6px; border: 1px solid #0ea5e9; outline: none; }
+    #result { 
+        margin-top: 12px; padding: 15px; background: #020617; border-radius: 10px; 
+        line-height: 1.6; font-weight: 500; min-height: 150px; text-align: left; 
+        border: 1px solid #1e293b; color: #e2e8f0;
+    }
+    canvas { background: white; border-radius: 10px; border: 2px solid #0ea5e9; }
+    .keypad { display: grid; grid-template-columns: repeat(3, 60px); gap: 6px; margin-top: 10px; justify-content: center;}
+    .keypad button { padding: 12px; font-size: 18px; background: #22d3ee; border-radius: 6px; border: none; cursor: pointer; color: white; font-weight: bold; }
+    .keypad button:hover { background: #0ea5e9; }
+    .btn-reset { background: #f87171 !important; margin-top: 5px; }
+</style>
+</head>
+<body>
+
+<h1>📐 Coordinate Plane & Pythagoras Distance</h1>
+
+<div class="wrapper">
+    <div class="panel">
+        <h3>Point A (x, y)</h3>
+        <input id="x1" placeholder="x1" readonly><input id="y1" placeholder="y1" readonly>
+        <h3>Point B (x, y)</h3>
+        <input id="x2" placeholder="x2" readonly><input id="y2" placeholder="y2" readonly>
+        
+        <div id="result">Enter coordinates to see algebraic steps...</div>
+
+        <div class="keypad">
+            <button onclick="put(1)">1</button><button onclick="put(2)">2</button><button onclick="put(3)">3</button>
+            <button onclick="put(4)">4</button><button onclick="put(5)">5</button><button onclick="put(6)">6</button>
+            <button onclick="put(7)">7</button><button onclick="put(8)">8</button><button onclick="put(9)">9</button>
+            <button onclick="put('-')">-</button><button onclick="put(0)">0</button><button onclick="clearInput()">C</button>
+            <button class="btn-reset" onclick="resetAll()" style="grid-column: span 3;">Reset All</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <canvas id="plane" width="500" height="500"></canvas>
+    </div>
+</div>
+
+<script>
+let active = null;
+
+document.querySelectorAll("input").forEach(i => {
+    i.onclick = () => {
+        document.querySelectorAll("input").forEach(inp => inp.style.borderColor = "#0ea5e9");
+        active = i;
+        i.style.borderColor = "#f87171"; 
+    };
+});
+
+function put(n) { if(active) { active.value += n; draw(); } }
+function clearInput() { if(active) { active.value = ""; draw(); } }
+function resetAll() { 
+    document.querySelectorAll("input").forEach(i => { i.value = ""; i.style.borderColor = "#0ea5e9"; });
+    active = null;
+    document.getElementById("result").innerHTML = "Enter coordinates to see algebraic steps...";
+    draw(); 
+}
+
+function draw() {
+    let x1 = parseFloat(document.getElementById("x1").value);
+    let y1 = parseFloat(document.getElementById("y1").value);
+    let x2 = parseFloat(document.getElementById("x2").value);
+    let y2 = parseFloat(document.getElementById("y2").value);
+
+    let canvas = document.getElementById("plane");
+    let ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, 500, 500);
+
+    const mx = (x) => 250 + x * 25;
+    const my = (y) => 250 - y * 25;
+
+    // 1. Draw Grid
+    ctx.strokeStyle = "#e0f2fe";
+    ctx.lineWidth = 1;
+    for(let i=0; i<=500; i+=25) {
+        ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,500); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(500,i); ctx.stroke();
+    }
+
+    // 2. Draw Axes
+    ctx.strokeStyle = "#0284c7"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(250,0); ctx.lineTo(250,500); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,250); ctx.lineTo(500,250); ctx.stroke();
+
+    // 3. Draw Axis Numbers (Scale)
+    ctx.fillStyle = "#0284c7";
+    ctx.font = "10px Arial";
+    ctx.textAlign = "center";
+    for(let i = -10; i <= 10; i++) {
+        if(i === 0) continue;
+        // X-axis numbers
+        ctx.fillText(i, mx(i), 265);
+        // Y-axis numbers
+        ctx.fillText(i, 235, my(i) + 3);
+    }
+
+    if(isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) return;
+
+    // Calculations
+    let sideA = Math.abs(x2 - x1);
+    let sideB = Math.abs(y2 - y1);
+    let sumSq = (sideA * sideA) + (sideB * sideB);
+    let dist = Math.sqrt(sumSq);
+
+    // Draw Triangle
+    ctx.setLineDash([5, 5]); ctx.strokeStyle = "#94a3b8";
+    ctx.beginPath();
+    ctx.moveTo(mx(x1), my(y1));
+    ctx.lineTo(mx(x2), my(y1));
+    ctx.lineTo(mx(x2), my(y2));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw Hypotenuse
+    ctx.strokeStyle = "#22d3ee"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(mx(x1), my(y1)); ctx.lineTo(mx(x2), my(y2)); ctx.stroke();
+
+    // Labels on Canvas
+    ctx.fillStyle = "#020617"; ctx.font = "bold 13px Tajawal";
+    ctx.fillText("a=" + sideA, mx((x1+x2)/2), my(y1) - 5);
+    ctx.fillText("b=" + sideB, mx(x2) + 15, my((y1+y2)/2));
+
+    // Points
+    ctx.fillStyle = "#f87171"; ctx.beginPath(); ctx.arc(mx(x1), my(y1), 6, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#34d399"; ctx.beginPath(); ctx.arc(mx(x2), my(y2), 6, 0, Math.PI*2); ctx.fill();
+
+    // Result Output (Steps)
+    document.getElementById("result").innerHTML = `
+        <div style="font-size: 14px;">
+            <b>1. Find Side Lengths:</b><br>
+            a = |x₂ - x₁| = |${x2} - ${x1}| = ${sideA}<br>
+            b = |y₂ - y₁| = |${y2} - ${y1}| = ${sideB}<br><br>
+            <b>2. Pythagoras Theorem (c² = a² + b²):</b><br>
+            c² = ${sideA}² + ${sideB}² = ${sideA*sideA} + ${sideB*sideB} = ${sumSq}<br><br>
+            <b>3. Solve for Distance (c):</b><br>
+            c = √${sumSq} = <span style="color: #22d3ee; font-size: 18px;">${dist.toFixed(3)}</span>
+        </div>
+    `;
+}
+draw();
+</script>
+</body>
+</html>
